@@ -9,7 +9,7 @@ const worldsFetchReducer = (state, action) => {
       return {
         isLoadingWorlds: false,
         isWorldsError: false,
-        worldsData: { ...action.payload },
+        worldsData: action.payload,
       };
     case "FETCHING_WORLDS_FAILURE":
       return { isLoadingWorlds: false, isWorldsError: true };
@@ -74,7 +74,7 @@ const NA_region = () => {
   });
 
   // reorganised matchup data into new object
-  const [cleanedData, setCleanedData] = useState([])
+  const [cleanedData, setCleanedData] = useState([]);
 
   //fetch names of all worlds
   useEffect(() => {
@@ -121,6 +121,7 @@ const NA_region = () => {
       const match_data = [];
       try {
         let id_list = [...matchesState.matchesData];
+
         for (let i = 0; i < id_list.length; i++) {
           if (id_list[i][0] === "1") {
             const result = await axios(
@@ -129,41 +130,65 @@ const NA_region = () => {
             match_data.push(result.data);
           }
         }
+
+        dispatchOverview({
+          type: "FETCHING_OVERVIEW_SUCCESS",
+          payload: match_data,
+        });
       } catch (error) {
         dispatchOverview({ type: "FETCHING_OVERVIEW_FAILURE" });
       }
-      dispatchOverview({
-        type: "FETCHING_OVERVIEW_SUCCESS",
-        payload: match_data,
-      });
     };
     fetchOverview();
   }, [matchesState.matchesData]);
-  
+
   // create new object with the fetched data
   useEffect(() => {
-    let new_data = [];
-    for(let i = 0; i<matchesState.matchesData.length; i++) {
-      let id_props = {
-        id: matchesState.matchesData[i],
-        redworlds: "",
-        blueworlds: "",
-        greenworlds: "",
-        red_vpoints: "",
-        blue_vpoints: "",
-        green_vpoints: "",
+    if (
+      overviewState.overviewData !== undefined &&
+      overviewState.overviewData.length !== 0
+    ) {
+      let new_data = [];
+      for (let i = 0; i < overviewState.overviewData.length; i++) {
+        let id_props = {
+          id: overviewState.overviewData[i].id,
+          redworlds: map_worldid(overviewState.overviewData[i].all_worlds.red),
+          blueworlds: map_worldid(
+            overviewState.overviewData[i].all_worlds.blue
+          ),
+          greenworlds: map_worldid(
+            overviewState.overviewData[i].all_worlds.green
+          ),
+          red_vpoints: overviewState.overviewData[i].victory_points.red,
+          blue_vpoints: overviewState.overviewData[i].victory_points.blue,
+          green_vpoints: overviewState.overviewData[i].victory_points.green,
+        };
+        new_data.push(id_props);
+      }
+
+      setCleanedData(new_data);
+      console.log(new_data);
+    }
+  }, [overviewState.overviewData]);
+
+  const map_worldid = (world_list) => {
+    let team = "";
+    for (let i = 0; i < worldsState.worldsData.length; i++) {
+      if (world_list.includes(worldsState.worldsData[i].id)) {
+        if (i === worldsState.worldsData.length - 2) {
+          team = team + worldsState.worldsData[i].name;
+        } else {
+          team = team + worldsState.worldsData[i].name;
+        }
       }
     }
-  }, [overviewState.overviewData])
 
-  const map_worldid = () => {
-    
-  }
-
+    return team;
+  };
 
   return (
     <div className="display-grid">
-      <h1></h1>
+      <h1>l</h1>
     </div>
   );
 };
