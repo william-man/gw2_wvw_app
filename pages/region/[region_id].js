@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useReducer } from "react";
 import axios from "axios";
+import Link from "next/link";
+import { useRouter } from "next/router";
 
 const worldsFetchReducer = (state, action) => {
   switch (action.type) {
@@ -75,6 +77,7 @@ const NA_region = () => {
 
   // reorganised matchup data into new object
   const [cleanedData, setCleanedData] = useState([]);
+  const router = useRouter();
 
   //fetch names of all worlds
   useEffect(() => {
@@ -123,7 +126,12 @@ const NA_region = () => {
         let id_list = [...matchesState.matchesData];
 
         for (let i = 0; i < id_list.length; i++) {
-          if (id_list[i][0] === "1") {
+          if (id_list[i][0] === "1" && router.query.region_id === "NA") {
+            const result = await axios(
+              "https://api.guildwars2.com/v2/wvw/matches/" + id_list[i]
+            );
+            match_data.push(result.data);
+          } else if (id_list[i][0] === "2" && router.query.region_id === "EU") {
             const result = await axios(
               "https://api.guildwars2.com/v2/wvw/matches/" + id_list[i]
             );
@@ -165,9 +173,7 @@ const NA_region = () => {
         };
         new_data.push(id_props);
       }
-
       setCleanedData(new_data);
-      console.log(new_data);
     }
   }, [overviewState.overviewData]);
 
@@ -175,20 +181,76 @@ const NA_region = () => {
     let team = "";
     for (let i = 0; i < worldsState.worldsData.length; i++) {
       if (world_list.includes(worldsState.worldsData[i].id)) {
-        if (i === worldsState.worldsData.length - 2) {
-          team = team + worldsState.worldsData[i].name;
+        if (team === "") {
+          team = team + worldsState.worldsData[i].name + ", ";
         } else {
           team = team + worldsState.worldsData[i].name;
         }
       }
     }
-
     return team;
   };
 
   return (
-    <div className="display-grid">
-      <h1>l</h1>
+    <div className="reg_display_container">
+      <div className="heading-row">
+        {router.query.region_id === "NA" ? (
+          <h1>NA region Matchup data</h1>
+        ) : (
+          <h1>EU region Matchup data</h1>
+        )}
+      </div>
+
+      {worldsState.isLoadingWorlds === true ||
+      matchesState.isLoadingMatches === true ||
+      overviewState.isLoadingOverview === true ? (
+        <div className="result-row">
+          <div className="loader"></div>
+        </div>
+      ) : worldsState.isWorldsError === true ||
+        matchesState.isMatchesError === true ||
+        overviewState.isOverviewError === true ? (
+        <div className="result-row">
+          <div>Error</div>
+        </div>
+      ) : (
+        <div className="result-row">
+          {cleanedData.map((data) => {
+            return (
+              <table>
+                <tr>
+                  <th>World(s)</th>
+                  <th>Victory Points</th>
+                  <th>History</th>
+                </tr>
+                <tr>
+                  <td>{data.redworlds}</td>
+                  <td>{data.red_vpoints}</td>
+                  <td>
+                    <Link
+                      href={{
+                        pathname: "matchup/[matchup_id]",
+                        query: { matchup_id: data.id },
+                      }}
+                    >
+                      <a>More info</a>
+                    </Link>
+                  </td>
+                </tr>
+                <tr>
+                  <td>{data.blueworlds}</td>
+                  <td>{data.blue_vpoints}</td>
+                </tr>
+                <tr>
+                  <td>{data.greenworlds}</td>
+                  <td>{data.green_vpoints}</td>
+                </tr>
+                <tr></tr>
+              </table>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };

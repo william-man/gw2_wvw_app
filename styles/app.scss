@@ -1,0 +1,46 @@
+html {
+  background-color: #3b3b3b;
+  color: #f1f1f1;
+}
+
+//layout
+@import "layout/_content.scss";
+@import "layout/_header.scss";
+@import "layout/_footer.scss";
+
+//components
+@import "components/spinner";
+
+//pages
+@import "pages/index.scss";
+@import "pages/regions.scss";
+@import "pages/matchup.scss";
+
+//font
+@font-face {
+  font-family: "PTSerif-Regular";
+  src: url(./fonts/PTSerif-Regular.ttf) format("truetype");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "PTSerif-Bold";
+  src: url(./fonts/PTSerif-Bold.ttf) format("truetype");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "PTSerif-Italic";
+  src: url(./fonts/PTSerif-Italic.ttf) format("truetype");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "PTSerif-BoldItalic";
+  src: url(./fonts/PTSerif-BoldItalic.ttf) format("truetype");
+  font-weight: normal;
+  font-style: normal;
+}
