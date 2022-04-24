@@ -3,4 +3,9 @@
 
 11/2/22:
 [x] building the functions to fetch data for the app
-[] map and display the data onto the DOM
+
+10/4/22:
+[x] map and display the data onto the DOM
+
+17/4/22:
+[x] organise the data with css

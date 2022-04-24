@@ -193,6 +193,11 @@ const NA_region = () => {
 
   return (
     <div className="reg_display_container">
+      <div className="back">
+        <button type="button" onClick={() => router.back()}>
+          Go Back
+        </button>
+      </div>
       <div className="heading-row">
         {router.query.region_id === "NA" ? (
           <h1>NA region Matchup data</h1>
@@ -211,42 +216,47 @@ const NA_region = () => {
         matchesState.isMatchesError === true ||
         overviewState.isOverviewError === true ? (
         <div className="result-row">
-          <div>Error</div>
+          <div className="error">Sorry an error has occurred. Please try again.</div>
         </div>
       ) : (
         <div className="result-row">
           {cleanedData.map((data) => {
             return (
-              <table>
-                <tr>
-                  <th>World(s)</th>
-                  <th>Victory Points</th>
-                  <th>History</th>
-                </tr>
-                <tr>
-                  <td>{data.redworlds}</td>
-                  <td>{data.red_vpoints}</td>
-                  <td>
-                    <Link
-                      href={{
-                        pathname: "matchup/[matchup_id]",
-                        query: { matchup_id: data.id },
-                      }}
-                    >
-                      <a>More info</a>
-                    </Link>
-                  </td>
-                </tr>
-                <tr>
-                  <td>{data.blueworlds}</td>
-                  <td>{data.blue_vpoints}</td>
-                </tr>
-                <tr>
-                  <td>{data.greenworlds}</td>
-                  <td>{data.green_vpoints}</td>
-                </tr>
-                <tr></tr>
-              </table>
+              <>
+                <h2>Tier {data.id[2]}</h2>
+                <table>
+                  <tr>
+                    <th>World(s)</th>
+                    <th>Victory Points</th>
+                    <th>History</th>
+                  </tr>
+                  <tr>
+                    <td>{data.redworlds}</td>
+                    <td className="points">{data.red_vpoints}</td>
+                    <td className="history" rowSpan={3}>
+                      <Link
+                        href={{
+                          pathname: "matchup/[matchup_id]",
+                          query: {
+                            matchup_id: data.id,
+                          },
+                        }}
+                      >
+                        <a>More info</a>
+                      </Link>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>{data.blueworlds}</td>
+                    <td className="points">{data.blue_vpoints}</td>
+                  </tr>
+                  <tr>
+                    <td>{data.greenworlds}</td>
+                    <td className="points">{data.green_vpoints}</td>
+                  </tr>
+                  <tr></tr>
+                </table>
+              </>
             );
           })}
         </div>

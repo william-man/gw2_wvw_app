@@ -7,23 +7,26 @@ export default function Home() {
         <h1>Choose your region:</h1>
       </div>
       <div className="index-links">
-        <Link
-          href={{
-            pathname: "/region/[region_id]",
-            query: { region_id: "NA" },
-          }}
-        >
-          <a className="index-links NA">North America</a>
-        </Link>
-
-        <Link
-          href={{
-            pathname: "/region/[region_id]",
-            query: { region_id: "EU" },
-          }}
-        >
-          <a className="index-links EU">Europe</a>
-        </Link>
+        <div className="link-NA region-links">
+          <Link
+            href={{
+              pathname: "/region/[region_id]",
+              query: { region_id: "NA" },
+            }}
+          >
+            <a>North America</a>
+          </Link>
+        </div>
+        <div className="link-EU region-links">
+          <Link
+            href={{
+              pathname: "/region/[region_id]",
+              query: { region_id: "EU" },
+            }}
+          >
+            <a>Europe</a>
+          </Link>
+        </div>
       </div>
     </div>
   );
