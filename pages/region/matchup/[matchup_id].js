@@ -102,23 +102,23 @@ const MatchupDetails = () => {
     if (router.isReady) {
       fetchData();
     }
-  }, []);
+  }, [router.isReady]);
 
-   // Map world id to their names
+  // Map world id to their names
   const map_worldid = (world_list) => {
-      let team = "";
-      for (let i = 0; i < worldsState.worldsData.length; i++) {
-        if (world_list.includes(worldsState.worldsData[i].id)) {
-          if (team === "") {
-            team = team + worldsState.worldsData[i].name + ", ";
-          } else {
-            team = team + worldsState.worldsData[i].name;
-          }
+    let team = "";
+    for (let i = 0; i < worldsState.worldsData.length; i++) {
+      if (world_list.includes(worldsState.worldsData[i].id)) {
+        if (team === "") {
+          team = team + worldsState.worldsData[i].name + ", ";
+        } else {
+          team = team + worldsState.worldsData[i].name;
         }
       }
-      return team;
-    };
-    // sort worlds after data is fetched
+    }
+    return team;
+  };
+  // sort worlds after data is fetched
   useEffect(() => {
     const mapWorlds = () => {
       if (matchData.overview !== undefined && matchData.overview.length !== 0) {
