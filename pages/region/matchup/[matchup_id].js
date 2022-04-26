@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useReducer } from "react";
 import { useRouter } from "next/router";
-import Link from "next/link";
 import axios from "axios";
 import {
   LineChart,
@@ -8,15 +7,11 @@ import {
   XAxis,
   YAxis,
   Tooltip,
-  Legend,
-  PieChart,
-  Pie,
-  Cell,
   CartesianGrid,
   ResponsiveContainer,
 } from "recharts";
 
-const worldsReducer = (state, action) => {
+const WorldsReducer = (state, action) => {
   switch (action.type) {
     case "FETCHING_WORLDS":
       return { isLoadingWorlds: true, isWorldsError: false };
@@ -33,7 +28,7 @@ const worldsReducer = (state, action) => {
   }
 };
 
-const dataReducer = (state, action) => {
+const DataReducer = (state, action) => {
   switch (action.type) {
     case "FETCHING_DATA":
       return { isLoadingData: true, isLoadingError: false };
@@ -52,22 +47,21 @@ const dataReducer = (state, action) => {
 
 const COLORS = ["#bf2626", "#2db2e3", "#40bf26"];
 
-const matchupDetails = () => {
+const MatchupDetails = () => {
   // world data
-  const [worldsState, dispatchWorlds] = useReducer(worldsReducer, {
+  const [worldsState, dispatchWorlds] = useReducer(WorldsReducer, {
     isLoadingWorlds: false,
     isWorldsError: false,
     worldsData: [],
   });
   // match overview data
-  const [matchData, dispatchData] = useReducer(dataReducer, {
+  const [matchData, dispatchData] = useReducer(DataReducer, {
     isLoadingData: true,
     isLoadingError: false,
     overview: [],
   });
 
   const [lineData, setLineData] = useState([]);
-  const [pieData, setPieData] = useState([]);
   const [redWorlds, setRedWorlds] = useState("");
   const [blueWorlds, setBlueWorlds] = useState("");
   const [greenWorlds, setGreenWorlds] = useState("");
@@ -108,10 +102,23 @@ const matchupDetails = () => {
     if (router.isReady) {
       fetchData();
     }
-  }, [router.isReady]);
+  }, []);
 
-  // sort worlds after data is fetched
-
+   // Map world id to their names
+  const map_worldid = (world_list) => {
+      let team = "";
+      for (let i = 0; i < worldsState.worldsData.length; i++) {
+        if (world_list.includes(worldsState.worldsData[i].id)) {
+          if (team === "") {
+            team = team + worldsState.worldsData[i].name + ", ";
+          } else {
+            team = team + worldsState.worldsData[i].name;
+          }
+        }
+      }
+      return team;
+    };
+    // sort worlds after data is fetched
   useEffect(() => {
     const mapWorlds = () => {
       if (matchData.overview !== undefined && matchData.overview.length !== 0) {
@@ -122,22 +129,6 @@ const matchupDetails = () => {
     };
     mapWorlds();
   }, [matchData.overview]);
-
-  // Map world id to their names
-
-  const map_worldid = (world_list) => {
-    let team = "";
-    for (let i = 0; i < worldsState.worldsData.length; i++) {
-      if (world_list.includes(worldsState.worldsData[i].id)) {
-        if (team === "") {
-          team = team + worldsState.worldsData[i].name + ", ";
-        } else {
-          team = team + worldsState.worldsData[i].name;
-        }
-      }
-    }
-    return team;
-  };
 
   // reorganise data for drawing Line chart
   useEffect(() => {
@@ -153,25 +144,6 @@ const matchupDetails = () => {
         new_data.push(skirmishData);
       }
       setLineData(new_data);
-    }
-  }, [matchData.overview]);
-
-  // reorganise data for drawing pie chart
-  useEffect(() => {
-    if (matchData.overview !== undefined && matchData.overview.length !== 0) {
-      let new_piedata = [];
-      for (
-        let i = 0;
-        i < Object.keys(matchData.overview.victory_points).length;
-        i++
-      ) {
-        let points = {
-          team: Object.keys(matchData.overview.victory_points)[i],
-          points: Object.values(matchData.overview.victory_points)[i],
-        };
-        new_piedata.push(points);
-      }
-      setPieData(new_piedata);
     }
   }, [matchData.overview]);
 
@@ -234,27 +206,7 @@ const matchupDetails = () => {
       </ResponsiveContainer>
     );
   };
-  /*
-  const drawPieChart = () => {
-    return (
-      <PieChart width={300} height={300}>
-        <Pie
-          data={pieData}
-          dataKey="points"
-          cx="50%"
-          cy="50%"
-          outerRadius={90}
-          fill="#8884d8"
-          label
-        >
-          {pieData.map((entry, index) => (
-            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-          ))}
-        </Pie>
-      </PieChart>
-    );
-  };
-  */
+
   return (
     <div className="matchup-display-container">
       <div className="back">
@@ -351,4 +303,4 @@ const matchupDetails = () => {
   );
 };
 
-export default matchupDetails;
+export default MatchupDetails;

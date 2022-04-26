@@ -54,7 +54,7 @@ const overviewFetchReducer = (state, action) => {
   }
 };
 
-const NA_region = () => {
+const Region_Details = () => {
   // world data states
   const [worldsState, dispatchWorlds] = useReducer(worldsFetchReducer, {
     isLoadingWorlds: false,
@@ -150,6 +150,21 @@ const NA_region = () => {
     fetchOverview();
   }, [matchesState.matchesData]);
 
+  //sort worlds after data is fetched
+  
+  const map_worldid = (world_list) => {
+    let team = "";
+    for (let i = 0; i < worldsState.worldsData.length; i++) {
+      if (world_list.includes(worldsState.worldsData[i].id)) {
+        if (team === "") {
+          team = team + worldsState.worldsData[i].name + ", ";
+        } else {
+          team = team + worldsState.worldsData[i].name;
+        }
+      }
+    }
+    return team;
+  };
   // create new object with the fetched data
   useEffect(() => {
     if (
@@ -177,20 +192,6 @@ const NA_region = () => {
     }
   }, [overviewState.overviewData]);
 
-  const map_worldid = (world_list) => {
-    let team = "";
-    for (let i = 0; i < worldsState.worldsData.length; i++) {
-      if (world_list.includes(worldsState.worldsData[i].id)) {
-        if (team === "") {
-          team = team + worldsState.worldsData[i].name + ", ";
-        } else {
-          team = team + worldsState.worldsData[i].name;
-        }
-      }
-    }
-    return team;
-  };
-
   return (
     <div className="reg_display_container">
       <div className="back">
@@ -216,7 +217,9 @@ const NA_region = () => {
         matchesState.isMatchesError === true ||
         overviewState.isOverviewError === true ? (
         <div className="result-row">
-          <div className="error">Sorry an error has occurred. Please try again.</div>
+          <div className="error">
+            Sorry an error has occurred. Please try again.
+          </div>
         </div>
       ) : (
         <div className="result-row">
@@ -265,4 +268,4 @@ const NA_region = () => {
   );
 };
 
-export default NA_region;
+export default Region_Details;
