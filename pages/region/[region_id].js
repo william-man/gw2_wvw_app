@@ -151,15 +151,15 @@ const Region_Details = () => {
   }, [matchesState.matchesData]);
 
   //sort worlds after data is fetched
-  
+
   const map_worldid = (world_list) => {
     let team = "";
     for (let i = 0; i < worldsState.worldsData.length; i++) {
       if (world_list.includes(worldsState.worldsData[i].id)) {
-        if (team === "") {
-          team = team + worldsState.worldsData[i].name + ", ";
-        } else {
+        if (team.length === 0) {
           team = team + worldsState.worldsData[i].name;
+        } else {
+          team = team + ", " + worldsState.worldsData[i].name;
         }
       }
     }
@@ -195,15 +195,19 @@ const Region_Details = () => {
   return (
     <div className="reg_display_container">
       <div className="back">
-        <button type="button" onClick={() => router.back()}>
-          Go Back
-        </button>
+        <Link
+          href={{
+            pathname: "/",
+          }}
+        >
+          <a>Go Back</a>
+        </Link>
       </div>
       <div className="heading-row">
         {router.query.region_id === "NA" ? (
-          <h1>NA region Matchup data</h1>
+          <h3>NA region match up data</h3>
         ) : (
-          <h1>EU region Matchup data</h1>
+          <h3>EU region match up data</h3>
         )}
       </div>
 
@@ -225,41 +229,46 @@ const Region_Details = () => {
         <div className="result-row">
           {cleanedData.map((data) => {
             return (
-              <>
-                <h2>Tier {data.id[2]}</h2>
+              <div key={router.query.region_id + data.id}>
+                <h3>Tier {data.id[2]}</h3>
                 <table>
-                  <tr>
-                    <th>World(s)</th>
-                    <th>Victory Points</th>
-                    <th>History</th>
-                  </tr>
-                  <tr>
-                    <td>{data.redworlds}</td>
-                    <td className="points">{data.red_vpoints}</td>
-                    <td className="history" rowSpan={3}>
-                      <Link
-                        href={{
-                          pathname: "matchup/[matchup_id]",
-                          query: {
-                            matchup_id: data.id,
-                          },
-                        }}
-                      >
-                        <a>More info</a>
-                      </Link>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>{data.blueworlds}</td>
-                    <td className="points">{data.blue_vpoints}</td>
-                  </tr>
-                  <tr>
-                    <td>{data.greenworlds}</td>
-                    <td className="points">{data.green_vpoints}</td>
-                  </tr>
-                  <tr></tr>
+                  <thead>
+                    <tr>
+                      <th>World(s)</th>
+                      <th>Victory Points</th>
+                      <th>History</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>{data.redworlds}</td>
+                      <td className="points">{data.red_vpoints}</td>
+                      <td className="history" rowSpan={3}>
+                        <Link
+                          href={{
+                            pathname: "matchup/[matchup_id]",
+                            query: {
+                              matchup_id: data.id,
+                              region_id: router.query.region_id,
+                            },
+                          }}
+                        >
+                          <a>More info</a>
+                        </Link>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>{data.blueworlds}</td>
+                      <td className="points">{data.blue_vpoints}</td>
+                    </tr>
+                    <tr>
+                      <td>{data.greenworlds}</td>
+                      <td className="points">{data.green_vpoints}</td>
+                    </tr>
+                    <tr></tr>
+                  </tbody>
                 </table>
-              </>
+              </div>
             );
           })}
         </div>

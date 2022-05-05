@@ -1,15 +1,8 @@
 import React, { useState, useEffect, useReducer } from "react";
 import { useRouter } from "next/router";
 import axios from "axios";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
-  ResponsiveContainer,
-} from "recharts";
+import DrawLineChart from "../../../components/charts/line";
+import Link from "next/link";
 
 const WorldsReducer = (state, action) => {
   switch (action.type) {
@@ -65,6 +58,7 @@ const MatchupDetails = () => {
   const [redWorlds, setRedWorlds] = useState("");
   const [blueWorlds, setBlueWorlds] = useState("");
   const [greenWorlds, setGreenWorlds] = useState("");
+  const [height, setHeight] = useState(360);
   const router = useRouter();
 
   //fetch names of all worlds
@@ -109,10 +103,10 @@ const MatchupDetails = () => {
     let team = "";
     for (let i = 0; i < worldsState.worldsData.length; i++) {
       if (world_list.includes(worldsState.worldsData[i].id)) {
-        if (team === "") {
-          team = team + worldsState.worldsData[i].name + ", ";
-        } else {
+        if (team.length === 0) {
           team = team + worldsState.worldsData[i].name;
+        } else {
+          team = team + ", " + worldsState.worldsData[i].name;
         }
       }
     }
@@ -147,72 +141,32 @@ const MatchupDetails = () => {
     }
   }, [matchData.overview]);
 
-  const drawLineChart = () => {
-    return (
-      <ResponsiveContainer width="100%" height={700}>
-        <LineChart
-          data={lineData}
-          margin={{ top: 5, right: 35, bottom: 20, left: 35 }}
-        >
-          <Line
-            type="monotone"
-            dataKey="red_team"
-            name={redWorlds}
-            stroke="#bf2626"
-            strokeWidth={2}
-          />
-          <Line
-            type="monotone"
-            dataKey="blue_team"
-            name={blueWorlds}
-            stroke="#2db2e3"
-            strokeWidth={2}
-          />
-          <Line
-            type="monotone"
-            dataKey="green_team"
-            name={greenWorlds}
-            stroke="#40bf26"
-            strokeWidth={2}
-          />
-          <CartesianGrid
-            strokeDasharray={"1 0.5"}
-            opacity={"20%"}
-            fill="#4A4A4A"
-            fillOpacity={0.4}
-          />
-          <XAxis
-            dataKey={"id"}
-            label={{
-              value: "Skirmish number",
-              position: "bottom",
-              offset: 5,
-              fill: "#fff",
-            }}
-            stroke="#fff"
-          />
-          <YAxis
-            label={{
-              value: "Score",
-              position: "left",
-              offset: 15,
-              angle: -90,
-              fill: "#fff",
-            }}
-            stroke="#fff"
-          />
-          <Tooltip />
-        </LineChart>
-      </ResponsiveContainer>
-    );
-  };
+  //adjust height of line chart and screen sizes above 412px
+  useEffect(() => {
+    const mqls = window.matchMedia("(max-width: 412px)");
+    const sizeChange = (mql) => {
+      if (mql.matches) {
+        setHeight(360);
+      } else {
+        setHeight(400);
+      }
+    };
+    sizeChange(mqls);
+    mqls.addEventListener("change", sizeChange);
+    return () => mqls.removeEventListener("change", sizeChange);
+  }, []);
 
   return (
     <div className="matchup-display-container">
       <div className="back">
-        <button type="button" onClick={() => router.back()}>
-          Go Back
-        </button>
+        <Link
+          href={{
+            pathname: "/region/[region_id]",
+            query: { region_id: router.query.region_id },
+          }}
+        >
+          <a>Go Back</a>
+        </Link>
       </div>
       {worldsState.isLoadingData === true ||
       matchData.isLoadingData === true ? (
@@ -227,77 +181,83 @@ const MatchupDetails = () => {
           </div>
         </div>
       ) : (
-        <>
+        <div className="match-result-row">
           <div className="match-heading">
-            <h1>Current Matchup: Tier {matchData.overview.id[2]}</h1>
+            <h3>Current Matchup: Tier {matchData.overview.id[2]}</h3>
           </div>
-          <div className="match-result-row">
-            <div className="match-result-table">
-              <h3 className="subhead">Scores:</h3>
-              <table>
-                <thead>
-                  <tr>
-                    <th>World(s)</th>
-                    <th>Kills</th>
-                    <th>Deaths</th>
-                    <th>K/D</th>
-                    <th>War Score</th>
-                    <th>Victory Points</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr className="red-team">
-                    <td>{redWorlds}</td>
-                    <td>{matchData.overview.kills.red}</td>
-                    <td>{matchData.overview.deaths.red}</td>
-                    <td>
-                      {Math.floor(
-                        (matchData.overview.kills.red /
-                          matchData.overview.deaths.red) *
-                          10
-                      ) / 10}
-                    </td>
-                    <td>{matchData.overview.scores.red}</td>
-                    <td>{matchData.overview.victory_points.red}</td>
-                  </tr>
-                  <tr className="blue-team">
-                    <td>{blueWorlds}</td>
-                    <td>{matchData.overview.kills.blue}</td>
-                    <td>{matchData.overview.deaths.blue}</td>
-                    <td>
-                      {Math.floor(
-                        (matchData.overview.kills.blue /
-                          matchData.overview.deaths.blue) *
-                          10
-                      ) / 10}
-                    </td>
-                    <td>{matchData.overview.scores.blue}</td>
-                    <td>{matchData.overview.victory_points.blue}</td>
-                  </tr>
-                  <tr className="green-team">
-                    <td>{greenWorlds}</td>
-                    <td>{matchData.overview.kills.green}</td>
-                    <td>{matchData.overview.deaths.green}</td>
-                    <td>
-                      {Math.floor(
-                        (matchData.overview.kills.green /
-                          matchData.overview.deaths.green) *
-                          10
-                      ) / 10}
-                    </td>
-                    <td>{matchData.overview.scores.green}</td>
-                    <td>{matchData.overview.victory_points.green}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <div className="match-result-line">
-              <h2>Skirmish Scores</h2>
-              <h3 className="subhead">Across all borderlands</h3>
-              <div>{drawLineChart()}</div>
+          <div className="match-result-table">
+            <h3 className="subhead">Scores:</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>World(s)</th>
+                  <th>Kills</th>
+                  <th>Deaths</th>
+                  <th>K/D</th>
+                  <th>War Score</th>
+                  <th>Victory Points</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="red-team">
+                  <td>{redWorlds}</td>
+                  <td>{matchData.overview.kills.red}</td>
+                  <td>{matchData.overview.deaths.red}</td>
+                  <td>
+                    {Math.floor(
+                      (matchData.overview.kills.red /
+                        matchData.overview.deaths.red) *
+                        10
+                    ) / 10}
+                  </td>
+                  <td>{matchData.overview.scores.red}</td>
+                  <td>{matchData.overview.victory_points.red}</td>
+                </tr>
+                <tr className="blue-team">
+                  <td>{blueWorlds}</td>
+                  <td>{matchData.overview.kills.blue}</td>
+                  <td>{matchData.overview.deaths.blue}</td>
+                  <td>
+                    {Math.floor(
+                      (matchData.overview.kills.blue /
+                        matchData.overview.deaths.blue) *
+                        10
+                    ) / 10}
+                  </td>
+                  <td>{matchData.overview.scores.blue}</td>
+                  <td>{matchData.overview.victory_points.blue}</td>
+                </tr>
+                <tr className="green-team">
+                  <td>{greenWorlds}</td>
+                  <td>{matchData.overview.kills.green}</td>
+                  <td>{matchData.overview.deaths.green}</td>
+                  <td>
+                    {Math.floor(
+                      (matchData.overview.kills.green /
+                        matchData.overview.deaths.green) *
+                        10
+                    ) / 10}
+                  </td>
+                  <td>{matchData.overview.scores.green}</td>
+                  <td>{matchData.overview.victory_points.green}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div className="match-result-line">
+            <h2>Skirmish Scores</h2>
+            <h3 className="subhead">Across all borderlands</h3>
+            <div>
+              {DrawLineChart(
+                lineData,
+                height,
+                redWorlds,
+                blueWorlds,
+                greenWorlds
+              )}
             </div>
           </div>
-        </>
+        </div>
       )}
     </div>
   );

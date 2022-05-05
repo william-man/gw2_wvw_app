@@ -1,0 +1,169 @@
+//result display
+
+.reg_display_container {
+  display: grid;
+  grid-template-columns: auto;
+  grid-template-rows: auto auto auto;
+  margin: 0 auto;
+  max-width: 1000px;
+  .back {
+    grid-column: 1;
+    grid-row: 1;
+    a {
+      background-color: #008369;
+      color: #f1f1f1;
+      font-size: 1.5em;
+      font-weight: 400;
+      font-family: "PTSerif-regular";
+      border-radius: 5px;
+      border: none;
+      padding: 6px 40px;
+      margin-left: 35px;
+      text-decoration: none;
+      box-shadow: 5px 5px 5px #333333;
+    }
+    a:hover {
+      background-color: #00a181;
+    }
+  }
+  .heading-row {
+    grid-column: 1;
+    grid-row: 2;
+    h3 {
+      font-family: "PTSerif-Regular";
+      font-size: 1.6em;
+      font-weight: 400;
+      margin-left: 35px;
+    }
+  }
+  .result-row {
+    grid-column: 1;
+    grid-row: 3;
+    font-family: "PTSerif-Regular";
+    font-size: 1.2em;
+    font-weight: 400;
+    h3 {
+      margin-left: 35px;
+      font-size: 1.1em;
+    }
+    table {
+      margin: 0px auto;
+      border: 1px solid;
+      max-width: 900px;
+      width: 92%;
+
+      tr:nth-child(even) {
+        background-color: #4c4c4c;
+      }
+      tr:nth-child(odd) {
+        background-color: #3f3f3f;
+      }
+      th {
+        text-align: center;
+        padding: 10px 20px;
+        font-size: 0.9em;
+        font-weight: 400;
+      }
+      td {
+        padding: 5px 10px;
+        width: 33%;
+        font-size: 0.9em;
+      }
+      .points {
+        text-align: center;
+      }
+      .history {
+        text-align: center;
+        background-color: none;
+      }
+      a {
+        color: #f1f1f1;
+        background-color: #008369;
+        font-size: 0.9em;
+        padding: 9px 35px;
+        border-radius: 5px;
+        text-decoration: none;
+        box-shadow: 5px 5px 5px #333333;
+      }
+
+      a:hover {
+        background-color: #00a181;
+      }
+
+      a:visited {
+        text-decoration: none;
+      }
+    }
+  }
+
+  @media screen and (max-width: 800px) {
+    .back {
+      a {
+        font-size: 1.2em;
+        padding: 4px 30px;
+      }
+    }
+    .heading-row {
+      grid-column: 1;
+      grid-row: 2;
+      h3 {
+        font-size: 1.4em;
+      }
+    }
+    .result-row {
+      table {
+        max-width: 865px;
+        th {
+          padding: 5px 10px;
+        }
+        td {
+          font-size: 0.8em;
+        }
+        a {
+          padding: 9px 25px;
+        }
+      }
+    }
+  }
+  @media screen and (max-width: 433px) {
+    .result-row {
+      table {
+        a {
+          padding: 9px 15px;
+        }
+      }
+    }
+  }
+
+  @media screen and (max-width: 414px) {
+    .back {
+      a {
+        font-size: 1em;
+        margin-left: 15px;
+      }
+    }
+    .heading-row {
+      h3 {
+        margin-left: 15px;
+        font-size: 1.3em;
+      }
+    }
+    .result-row {
+      font-size: 1.2em;
+
+      h3 {
+        margin-left: 15px;
+      }
+      table {
+        margin-left: 15px;
+        margin-right: 15px;
+        th {
+          padding: 0px 10px;
+        }
+        a {
+          padding: 6px 10px;
+        }
+      }
+    }
+  }
+}

@@ -2,7 +2,9 @@ html {
   background-color: #3b3b3b;
   color: #f1f1f1;
 }
-
+body {
+  margin: auto;
+}
 //layout
 @import "layout/_content.scss";
 @import "layout/_header.scss";

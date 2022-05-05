@@ -1,0 +1,87 @@
+.index-display {
+  display: grid;
+  grid-template-columns: auto auto;
+  grid-template-rows: auto;
+  margin: 100px auto;
+  max-width: 900px;
+  gap: 30px;
+  .index-heading {
+    grid-column: 1;
+    grid-row: 1;
+    h3 {
+      font-size: 1.6em;
+      font-weight: 400;
+      font-family: "PTSerif-Regular";
+      text-align: left;
+      margin: 0px;
+    }
+  }
+
+  .link-EU {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .link-NA {
+    grid-column: 3;
+    grid-row: 1;
+  }
+  a {
+    display: block;
+    background-color: #008369;
+    color: #f1f1f1;
+    border-radius: 5px;
+    font-size: 1.1em;
+    font-weight: 400;
+    font-family: "PTSerif-Regular";
+    text-decoration: none;
+    text-align: center;
+    padding: 10px 0px;
+    width: 100%;
+    box-shadow: 5px 5px 5px #333333;
+  }
+
+  a:hover {
+    background-color: #00a181;
+  }
+
+  @media screen and (max-width: 800px) {
+    display: grid;
+    grid-template-columns: auto;
+    grid-template-rows: auto auto auto;
+    .index-heading {
+      grid-column: 1;
+      grid-row: 1;
+      margin: 0;
+      h3 {
+        text-align: center;
+        font-size: 1.5em;
+      }
+    }
+
+    .link-EU {
+      grid-column: 1;
+      grid-row: 2;
+    }
+
+    .link-NA {
+      grid-column: 1;
+      grid-row: 3;
+    }
+    a {
+      width: 50%;
+      margin: 0px auto;
+    }
+  }
+  @media screen and (max-width: 414px) {
+    .index-heading {
+      h1 {
+        font-size: 1.3em;
+      }
+    }
+    .index-links {
+      a {
+        width: 60%;
+      }
+    }
+  }
+}
