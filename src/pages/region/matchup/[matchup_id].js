@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useReducer } from "react";
 import { useRouter } from "next/router";
 import axios from "axios";
-import DrawLineChart from "../../../components/charts/line";
+import DrawLineChart from "../../../components/match_components/charts/line";
 import Link from "next/link";
 
 const WorldsReducer = (state, action) => {
