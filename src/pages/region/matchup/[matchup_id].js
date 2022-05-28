@@ -1,59 +1,24 @@
 import React, { useState, useEffect, useReducer } from "react";
 import { useRouter } from "next/router";
-import axios from "axios";
 import DrawLineChart from "../../../components/match_components/charts/line";
 import Link from "next/link";
-
-const WorldsReducer = (state, action) => {
-  switch (action.type) {
-    case "FETCHING_WORLDS":
-      return { isLoadingWorlds: true, isWorldsError: false };
-    case "FETCHING_WORLDS_SUCCESS":
-      return {
-        isLoadingWorlds: false,
-        isWorldsError: false,
-        worldsData: action.payload,
-      };
-    case "FETCHING_WORLDS_FAILURE":
-      return { isLoadingWorlds: false, isWorldsError: true };
-    default:
-      return state;
-  }
-};
-
-const DataReducer = (state, action) => {
-  switch (action.type) {
-    case "FETCHING_DATA":
-      return { isLoadingData: true, isLoadingError: false };
-    case "FETCHING_DATA_SUCCESS":
-      return {
-        isLoadingData: false,
-        isLoadingError: false,
-        overview: action.payload,
-      };
-    case "FETCHING_DATA_FAILURE":
-      return { isLoadingData: false, isLoadingError: true };
-    default:
-      return state;
-  }
-};
+import mapWorldid from "../../../components/region_components/worldname";
+import dataReducer from "../../../components/reducers/data_reducers";
+import Retrieve from "../../../components/match_components/retrieve";
 
 const COLORS = ["#bf2626", "#2db2e3", "#40bf26"];
 
 const MatchupDetails = () => {
-  // world data
-  const [worldsState, dispatchWorlds] = useReducer(WorldsReducer, {
-    isLoadingWorlds: false,
-    isWorldsError: false,
-    worldsData: [],
-  });
-  // match overview data
-  const [matchData, dispatchData] = useReducer(DataReducer, {
-    isLoadingData: true,
+  const [worldsState, dispatchWorlds] = useReducer(dataReducer, {
+    isLoading: false,
     isLoadingError: false,
-    overview: [],
+    fetchedData: [],
   });
-
+  const [dataState, dispatchData] = useReducer(dataReducer, {
+    isLoading: false,
+    isLoadingError: false,
+    fetchedData: [],
+  });
   const [lineData, setLineData] = useState([]);
   const [redWorlds, setRedWorlds] = useState("");
   const [blueWorlds, setBlueWorlds] = useState("");
@@ -63,83 +28,99 @@ const MatchupDetails = () => {
 
   //fetch names of all worlds
   useEffect(() => {
-    const fetchWorlds = async () => {
-      dispatchWorlds({ type: "FETCHING_WORLDS" });
-      try {
-        const worldList = await axios(
-          "https://api.guildwars2.com/v2/worlds?ids=all"
-        );
-        dispatchWorlds({
-          type: "FETCHING_WORLDS_SUCCESS",
-          payload: worldList.data,
-        });
-      } catch (error) {
-        dispatchWorlds({ type: "FETCHING_WORLDS_FAILURE" });
-      }
-    };
-    fetchWorlds();
+    dispatchWorlds({
+      type: "FETCHING_DATA",
+    });
+    if (sessionStorage.getItem("worlds")) {
+      dispatchWorlds({
+        type: "FETCHING_SUCCESS",
+        payload: JSON.parse(sessionStorage.getItem("worlds")),
+      });
+    } else {
+      dispatchWorlds({
+        type: "FETCHING_FAILURE",
+      });
+    }
   }, []);
 
   //fetch overview of selected match
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        dispatchData({ type: "FETCHING_DATA" });
-        const result = await axios(
-          "https://api.guildwars2.com/v2/wvw/matches/" + router.query.matchup_id
-        );
-        dispatchData({ type: "FETCHING_DATA_SUCCESS", payload: result.data });
-      } catch (error) {
-        dispatchData({ type: "FETCHING_DATA_FAILURE" });
-      }
-    };
-    if (router.isReady) {
-      fetchData();
+    dispatchData({
+      type: "FETCHING_DATA",
+    });
+    let targetData = "";
+    if (router.query.region_id === "EU" && sessionStorage.getItem("EU_data")) {
+      targetData = "EU_data";
+      dispatchData({
+        type: "FETCHING_SUCCESS",
+        payload: Retrieve(
+          JSON.parse(sessionStorage.getItem("EU_data")),
+          router.query.matchup_id
+        ),
+      });
+    } else if (
+      router.query.region_id === "NA" &&
+      sessionStorage.getItem("NA_data")
+    ) {
+      targetData = "NA_data";
+      dispatchData({
+        type: "FETCHING_SUCCESS",
+        payload: Retrieve(
+          JSON.parse(sessionStorage.getItem("NA_data")),
+          router.query.matchup_id
+        ),
+      });
+    } else {
+      dispatchData({
+        type: "FETCHING_FAILURE",
+      });
     }
-  }, [router.isReady]);
+  }, []);
 
-  // Map world id to their names
-  const map_worldid = (world_list) => {
-    let team = "";
-    for (let i = 0; i < worldsState.worldsData.length; i++) {
-      if (world_list.includes(worldsState.worldsData[i].id)) {
-        if (team.length === 0) {
-          team = team + worldsState.worldsData[i].name;
-        } else {
-          team = team + ", " + worldsState.worldsData[i].name;
-        }
-      }
-    }
-    return team;
-  };
   // sort worlds after data is fetched
+
   useEffect(() => {
-    const mapWorlds = () => {
-      if (matchData.overview !== undefined && matchData.overview.length !== 0) {
-        setRedWorlds(map_worldid(matchData.overview.all_worlds.red));
-        setBlueWorlds(map_worldid(matchData.overview.all_worlds.blue));
-        setGreenWorlds(map_worldid(matchData.overview.all_worlds.green));
-      }
-    };
-    mapWorlds();
-  }, [matchData.overview]);
+    if (dataState.fetchedData && worldsState.fetchedData.length > 0) {
+      setRedWorlds(
+        mapWorldid(
+          dataState.fetchedData.all_worlds.red,
+          worldsState.fetchedData
+        )
+      );
+      setBlueWorlds(
+        mapWorldid(
+          dataState.fetchedData.all_worlds.blue,
+          worldsState.fetchedData
+        )
+      );
+      setGreenWorlds(
+        mapWorldid(
+          dataState.fetchedData.all_worlds.green,
+          worldsState.fetchedData
+        )
+      );
+    }
+  }, [dataState.fetchedData]);
 
   // reorganise data for drawing Line chart
   useEffect(() => {
-    if (matchData.overview !== undefined && matchData.overview.length !== 0) {
-      let new_data = [];
-      for (let i = 0; i < matchData.overview.skirmishes.length; i++) {
-        let skirmishData = {
-          id: matchData.overview.skirmishes[i].id,
-          red_team: matchData.overview.skirmishes[i].scores.red,
-          blue_team: matchData.overview.skirmishes[i].scores.blue,
-          green_team: matchData.overview.skirmishes[i].scores.green,
+    if (
+      dataState.fetchedData !== undefined &&
+      Object.keys(dataState.fetchedData).length > 0
+    ) {
+      let skirmishData = [];
+      for (let i = 0; i < dataState.fetchedData.skirmishes.length; i++) {
+        let sorted = {
+          id: dataState.fetchedData.skirmishes[i].id,
+          red_team: dataState.fetchedData.skirmishes[i].scores.red,
+          blue_team: dataState.fetchedData.skirmishes[i].scores.blue,
+          green_team: dataState.fetchedData.skirmishes[i].scores.green,
         };
-        new_data.push(skirmishData);
+        skirmishData.push(sorted);
       }
-      setLineData(new_data);
+      setLineData(skirmishData);
     }
-  }, [matchData.overview]);
+  }, [dataState.fetchedData, worldsState.fetchedData]);
 
   //adjust height of line chart and screen sizes above 412px
   useEffect(() => {
@@ -168,96 +149,97 @@ const MatchupDetails = () => {
           <a>Go Back</a>
         </Link>
       </div>
-      {worldsState.isLoadingData === true ||
-      matchData.isLoadingData === true ? (
-        <div className="match-result-row">
-          <div className="loader"></div>
-        </div>
-      ) : worldsState.isLoadingError === true ||
-        matchData.isLoadingError === true ? (
+
+      {worldsState.isLoading || dataState.isLoading ? (
+        <div className="Loader"></div>
+      ) : worldsState.isLoadingError || dataState.isLoadingError ? (
         <div className="match-result-row">
           <div className="error">
             Sorry an error has occurred. Please try again.
           </div>
         </div>
       ) : (
-        <div className="match-result-row">
-          <div className="match-heading">
-            <h3>Current Matchup: Tier {matchData.overview.id[2]}</h3>
-          </div>
-          <div className="match-result-table">
-            <h3 className="subhead">Scores:</h3>
-            <table>
-              <thead>
-                <tr>
-                  <th>World(s)</th>
-                  <th>Kills</th>
-                  <th>Deaths</th>
-                  <th>K/D</th>
-                  <th>War Score</th>
-                  <th>Victory Points</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="red-team">
-                  <td>{redWorlds}</td>
-                  <td>{matchData.overview.kills.red}</td>
-                  <td>{matchData.overview.deaths.red}</td>
-                  <td>
-                    {Math.floor(
-                      (matchData.overview.kills.red /
-                        matchData.overview.deaths.red) *
-                        10
-                    ) / 10}
-                  </td>
-                  <td>{matchData.overview.scores.red}</td>
-                  <td>{matchData.overview.victory_points.red}</td>
-                </tr>
-                <tr className="blue-team">
-                  <td>{blueWorlds}</td>
-                  <td>{matchData.overview.kills.blue}</td>
-                  <td>{matchData.overview.deaths.blue}</td>
-                  <td>
-                    {Math.floor(
-                      (matchData.overview.kills.blue /
-                        matchData.overview.deaths.blue) *
-                        10
-                    ) / 10}
-                  </td>
-                  <td>{matchData.overview.scores.blue}</td>
-                  <td>{matchData.overview.victory_points.blue}</td>
-                </tr>
-                <tr className="green-team">
-                  <td>{greenWorlds}</td>
-                  <td>{matchData.overview.kills.green}</td>
-                  <td>{matchData.overview.deaths.green}</td>
-                  <td>
-                    {Math.floor(
-                      (matchData.overview.kills.green /
-                        matchData.overview.deaths.green) *
-                        10
-                    ) / 10}
-                  </td>
-                  <td>{matchData.overview.scores.green}</td>
-                  <td>{matchData.overview.victory_points.green}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <div className="match-result-line">
-            <h2>Skirmish Scores</h2>
-            <h3 className="subhead">Across all borderlands</h3>
-            <div>
-              {DrawLineChart(
-                lineData,
-                height,
-                redWorlds,
-                blueWorlds,
-                greenWorlds
-              )}
+        dataState.fetchedData &&
+        Object.keys(dataState.fetchedData).length > 0 && (
+          <div className="match-result-row">
+            <div className="match-heading">
+              <h3>Current Matchup: Tier {dataState.fetchedData.id[2]}</h3>
+            </div>
+
+            <div className="match-result-table">
+              <h3 className="subhead">Scores:</h3>
+              <table>
+                <thead>
+                  <tr>
+                    <th>World(s)</th>
+                    <th>Kills</th>
+                    <th>Deaths</th>
+                    <th>K/D</th>
+                    <th>War Score</th>
+                    <th>Victory Points</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="red-team">
+                    <td>{redWorlds}</td>
+                    <td>{dataState.fetchedData.kills.red}</td>
+                    <td>{dataState.fetchedData.deaths.red}</td>
+                    <td>
+                      {Math.floor(
+                        (dataState.fetchedData.kills.red /
+                          dataState.fetchedData.deaths.red) *
+                          10
+                      ) / 10}
+                    </td>
+                    <td>{dataState.fetchedData.scores.red}</td>
+                    <td>{dataState.fetchedData.victory_points.red}</td>
+                  </tr>
+                  <tr className="blue-team">
+                    <td>{blueWorlds}</td>
+                    <td>{dataState.fetchedData.kills.blue}</td>
+                    <td>{dataState.fetchedData.deaths.blue}</td>
+                    <td>
+                      {Math.floor(
+                        (dataState.fetchedData.kills.blue /
+                          dataState.fetchedData.deaths.blue) *
+                          10
+                      ) / 10}
+                    </td>
+                    <td>{dataState.fetchedData.scores.blue}</td>
+                    <td>{dataState.fetchedData.victory_points.blue}</td>
+                  </tr>
+                  <tr className="green-team">
+                    <td>{greenWorlds}</td>
+                    <td>{dataState.fetchedData.kills.green}</td>
+                    <td>{dataState.fetchedData.deaths.green}</td>
+                    <td>
+                      {Math.floor(
+                        (dataState.fetchedData.kills.green /
+                          dataState.fetchedData.deaths.green) *
+                          10
+                      ) / 10}
+                    </td>
+                    <td>{dataState.fetchedData.scores.green}</td>
+                    <td>{dataState.fetchedData.victory_points.green}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div className="match-result-line">
+              <h2>Skirmish Scores</h2>
+              <h3 className="subhead">Across all borderlands</h3>
+              <div>
+                {DrawLineChart(
+                  lineData,
+                  height,
+                  redWorlds,
+                  blueWorlds,
+                  greenWorlds
+                )}
+              </div>
             </div>
           </div>
-        </div>
+        )
       )}
     </div>
   );

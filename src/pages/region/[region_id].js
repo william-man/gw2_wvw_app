@@ -1,78 +1,29 @@
 import React, { useState, useEffect, useReducer } from "react";
-import axios from "axios";
 import Link from "next/link";
 import { useRouter } from "next/router";
-
-const worldsFetchReducer = (state, action) => {
-  switch (action.type) {
-    case "FETCHING_WORLDS":
-      return { isLoadingWorlds: true, isWorldsError: false };
-    case "FETCHING_WORLDS_SUCCESS":
-      return {
-        isLoadingWorlds: false,
-        isWorldsError: false,
-        worldsData: action.payload,
-      };
-    case "FETCHING_WORLDS_FAILURE":
-      return { isLoadingWorlds: false, isWorldsError: true };
-    default:
-      return state;
-  }
-};
-
-const matchesFetchReducer = (state, action) => {
-  switch (action.type) {
-    case "FETCHING_MATCHES":
-      return { isLoadingMatches: true, isMatchesError: false };
-    case "FETCHING_MATCHES_SUCCESS":
-      return {
-        isLoadingMatches: false,
-        isMatchesError: false,
-        matchesData: action.payload,
-      };
-    case "FETCHING_MATCHES_FAILURE":
-      return { isLoadingMatches: false, isMatchesError: true };
-    default:
-      return state;
-  }
-};
-
-const overviewFetchReducer = (state, action) => {
-  switch (action.type) {
-    case "FETCHING_OVERVIEW":
-      return { isLoadingOverview: true, isOverviewError: false };
-    case "FETCHING_OVERVIEW_SUCCESS":
-      return {
-        isLoadingOverview: false,
-        isOverviewError: false,
-        overviewData: action.payload,
-      };
-    case "FETCHING_OVERVIEW_FAILURE":
-      return { isLoadingOverview: false, isOverviewError: true };
-    default:
-      return state;
-  }
-};
+import fetcher from "../../components/region_components/fetch_data";
+import dataReducer from "../../components/reducers/data_reducers";
+import organiseData from "../../components/region_components/organise_data";
 
 const Region_Details = () => {
   // world data states
-  const [worldsState, dispatchWorlds] = useReducer(worldsFetchReducer, {
-    isLoadingWorlds: false,
-    isWorldsError: false,
-    worldsData: [],
+  const [worldsState, dispatchWorlds] = useReducer(dataReducer, {
+    isLoading: false,
+    isLoadingError: false,
+    fetchedData: [],
   });
   // match data states
-  const [matchesState, dispatchMatches] = useReducer(matchesFetchReducer, {
-    isLoadingMatches: false,
-    isMatchesError: false,
-    matchesData: [],
+  const [matchesState, dispatchMatches] = useReducer(dataReducer, {
+    isLoading: false,
+    isLoadingError: false,
+    fetchedData: [],
   });
 
-  // match overview data states
-  const [overviewState, dispatchOverview] = useReducer(overviewFetchReducer, {
-    isLoadingOverview: false,
-    isOverviewError: false,
-    overviewData: [],
+  // match score data states
+  const [scoreState, dispatchScore] = useReducer(dataReducer, {
+    isLoading: false,
+    isLoadingError: false,
+    fetchedData: [],
   });
 
   // reorganised matchup data into new object
@@ -82,115 +33,152 @@ const Region_Details = () => {
   //fetch names of all worlds
   useEffect(() => {
     const fetchWorlds = async () => {
-      dispatchWorlds({ type: "FETCHING_WORLDS" });
-      try {
-        const worldList = await axios(
-          "https://api.guildwars2.com/v2/worlds?ids=all"
-        );
+      dispatchWorlds({ type: "FETCHING_DATA" });
+      const result = await fetcher(
+        "https://api.guildwars2.com/v2/worlds?ids=all"
+      );
+      if (result.status === 200) {
         dispatchWorlds({
-          type: "FETCHING_WORLDS_SUCCESS",
-          payload: worldList.data,
+          type: "FETCHING_SUCCESS",
+          payload: JSON.stringify(result.data),
         });
-      } catch (error) {
-        dispatchWorlds({ type: "FETCHING_WORLDS_FAILURE" });
+      } else {
+        dispatchWorlds({ type: "FETCHING_FAILURE" });
       }
     };
-    fetchWorlds();
+    if (!sessionStorage.getItem("worlds")) {
+      fetchWorlds();
+    } else if (sessionStorage.getItem("matches")) {
+      dispatchWorlds({
+        type: "RETRIEVE_FROM_STORAGE",
+        payload: sessionStorage.getItem("worlds"),
+      });
+    }
   }, []);
+
+  useEffect(() => {
+    if (!sessionStorage.getItem("worlds") && worldsState.fetchedData) {
+      sessionStorage.setItem("worlds", worldsState.fetchedData);
+    }
+  }, [worldsState.fetchedData]);
 
   //fetch all current matches
   useEffect(() => {
     const fetchMatches = async () => {
-      dispatchMatches({ type: "FETCHING_MATCHES" });
-      try {
-        const matchList = await axios(
-          "https://api.guildwars2.com/v2/wvw/matches"
-        );
+      dispatchMatches({ type: "FETCHING_DATA" });
+      const result = await fetcher("https://api.guildwars2.com/v2/wvw/matches");
+      if (result.status === 200) {
         dispatchMatches({
-          type: "FETCHING_MATCHES_SUCCESS",
-          payload: matchList.data,
+          type: "FETCHING_SUCCESS",
+          payload: JSON.stringify(result.data),
         });
-      } catch (error) {
-        dispatchMatches({ type: "FETCHING_MATCHES_FAILURE" });
+      } else {
+        dispatchMatches({ type: "FETCHING_FAILURE" });
       }
     };
-    fetchMatches();
+    if (!sessionStorage.getItem("matches")) {
+      fetchMatches();
+    } else if (sessionStorage.getItem("matches")) {
+      dispatchMatches({
+        type: "RETRIEVE_FROM_STORAGE",
+        payload: sessionStorage.getItem("matches"),
+      });
+    }
   }, []);
 
-  //fetch overview of all current matches
   useEffect(() => {
-    const fetchOverview = async () => {
-      dispatchOverview({ type: "FETCHING_OVERVIEW" });
-      const match_data = [];
-      try {
-        let id_list = [...matchesState.matchesData];
+    if (!sessionStorage.getItem("matches") && matchesState.fetchedData) {
+      sessionStorage.setItem("matches", matchesState.fetchedData);
+    }
+  }, [matchesState.fetchedData]);
 
-        for (let i = 0; i < id_list.length; i++) {
-          if (id_list[i][0] === "1" && router.query.region_id === "NA") {
-            const result = await axios(
-              "https://api.guildwars2.com/v2/wvw/matches/" + id_list[i]
-            );
-            match_data.push(result.data);
-          } else if (id_list[i][0] === "2" && router.query.region_id === "EU") {
-            const result = await axios(
-              "https://api.guildwars2.com/v2/wvw/matches/" + id_list[i]
-            );
-            match_data.push(result.data);
-          }
+  //fetch score of all current matches
+  useEffect(() => {
+    const fetchscore = async (n) => {
+      dispatchScore({ type: "FETCHING_DATA" });
+      let match_list = "";
+      const fetched_matches = JSON.parse(matchesState.fetchedData);
+      for (let i = 0; i < fetched_matches.length; i++) {
+        if (fetched_matches[i][0] === n) {
+          match_list = match_list + fetched_matches[i] + ",";
         }
-
-        dispatchOverview({
-          type: "FETCHING_OVERVIEW_SUCCESS",
-          payload: match_data,
+      }
+      const result = await fetcher(
+        "https://api.guildwars2.com/v2/wvw/matches?ids=" + match_list
+      );
+      if (result.status === 206) {
+        dispatchScore({
+          type: "FETCHING_SUCCESS",
+          payload: JSON.stringify(result.data),
         });
-      } catch (error) {
-        dispatchOverview({ type: "FETCHING_OVERVIEW_FAILURE" });
+      } else {
+        dispatchScore({
+          type: "FETCHING_FAILURE",
+        });
       }
     };
-    fetchOverview();
-  }, [matchesState.matchesData]);
-
-  //sort worlds after data is fetched
-
-  const map_worldid = (world_list) => {
-    let team = "";
-    for (let i = 0; i < worldsState.worldsData.length; i++) {
-      if (world_list.includes(worldsState.worldsData[i].id)) {
-        if (team.length === 0) {
-          team = team + worldsState.worldsData[i].name;
-        } else {
-          team = team + ", " + worldsState.worldsData[i].name;
-        }
+    if (matchesState.fetchedData && matchesState.fetchedData.length > 0) {
+      if (
+        router.query.region_id === "NA" &&
+        !sessionStorage.getItem("NA_data")
+      ) {
+        fetchscore("1");
+      } else if (
+        router.query.region_id === "EU" &&
+        !sessionStorage.getItem("EU_data")
+      ) {
+        fetchscore("2");
+      } else if (
+        router.query.region_id === "NA" &&
+        sessionStorage.getItem("NA_data")
+      ) {
+        dispatchScore({
+          type: "RETRIEVE_FROM_STORAGE",
+          payload: sessionStorage.getItem("NA_data"),
+        });
+      } else if (
+        router.query.region_id === "EU" &&
+        sessionStorage.getItem("EU_data")
+      ) {
+        dispatchScore({
+          type: "RETRIEVE_FROM_STORAGE",
+          payload: sessionStorage.getItem("EU_data"),
+        });
       }
     }
-    return team;
-  };
+  }, [matchesState.fetchedData]);
+
+  useEffect(() => {
+    if (
+      router.query.region_id === "NA" &&
+      scoreState.fetchedData &&
+      !sessionStorage.getItem("NA_data")
+    ) {
+      sessionStorage.setItem("NA_data", scoreState.fetchedData);
+    } else if (
+      router.query.region_id === "EU" &&
+      scoreState.fetchedData &&
+      !sessionStorage.getItem("EU_data")
+    ) {
+      sessionStorage.setItem("EU_data", scoreState.fetchedData);
+    }
+  }, [scoreState.fetchedData]);
+
   // create new object with the fetched data
   useEffect(() => {
     if (
-      overviewState.overviewData !== undefined &&
-      overviewState.overviewData.length !== 0
+      scoreState.fetchedData &&
+      scoreState.fetchedData.length > 0 &&
+      worldsState.fetchedData &&
+      worldsState.fetchedData.length > 0
     ) {
-      let new_data = [];
-      for (let i = 0; i < overviewState.overviewData.length; i++) {
-        let id_props = {
-          id: overviewState.overviewData[i].id,
-          redworlds: map_worldid(overviewState.overviewData[i].all_worlds.red),
-          blueworlds: map_worldid(
-            overviewState.overviewData[i].all_worlds.blue
-          ),
-          greenworlds: map_worldid(
-            overviewState.overviewData[i].all_worlds.green
-          ),
-          red_vpoints: overviewState.overviewData[i].victory_points.red,
-          blue_vpoints: overviewState.overviewData[i].victory_points.blue,
-          green_vpoints: overviewState.overviewData[i].victory_points.green,
-        };
-        new_data.push(id_props);
-      }
-      setCleanedData(new_data);
+      const data = organiseData(
+        JSON.parse(scoreState.fetchedData),
+        JSON.parse(worldsState.fetchedData)
+      );
+      setCleanedData(data);
     }
-  }, [overviewState.overviewData]);
+  }, [scoreState.fetchedData, worldsState.fetchedData]);
 
   return (
     <div className="reg_display_container">
@@ -211,15 +199,15 @@ const Region_Details = () => {
         )}
       </div>
 
-      {worldsState.isLoadingWorlds === true ||
-      matchesState.isLoadingMatches === true ||
-      overviewState.isLoadingOverview === true ? (
+      {worldsState.isLoading === true ||
+      matchesState.isLoading === true ||
+      scoreState.isLoading === true ? (
         <div className="result-row">
           <div className="loader"></div>
         </div>
       ) : worldsState.isWorldsError === true ||
         matchesState.isMatchesError === true ||
-        overviewState.isOverviewError === true ? (
+        scoreState.isscoreError === true ? (
         <div className="result-row">
           <div className="error">
             Sorry an error has occurred. Please try again.

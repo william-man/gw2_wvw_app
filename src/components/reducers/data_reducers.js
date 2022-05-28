@@ -16,6 +16,12 @@ const dataReducer = (state, action) => {
         isLoading: false,
         isLoadingError: true,
       };
+    case "RETRIEVE_FROM_STORAGE":
+      return {
+        isLoading: false,
+        isLoadingError: false,
+        fetchedData: action.payload,
+      }
     default:
       return state;
   }
