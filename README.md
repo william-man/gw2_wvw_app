@@ -17,3 +17,6 @@
 28/5/22:
 [x] reduced network calls, fetched data saved in session storage.
 [x] added tests to check core functions of the app.
+
+
+Hosted on vercel
